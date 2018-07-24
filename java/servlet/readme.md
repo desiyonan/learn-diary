@@ -2,6 +2,8 @@
 
 ## 简介
 
+---
+
 ### Servlet 是什么
 
 >Java Servlet 是运行在 Web 服务器或应用服务器上的程序，它是作为来自 Web 浏览器或其他 HTTP 客户端的请求和 HTTP 服务器上的数据库或应用程序之间的中间层。
@@ -69,6 +71,8 @@ Servlet 容器的分类：
    处理关于 Servlet 的请求\响应，容纳管理所有 Servlet ，是 Web 服务器和 Servlet 交互必不可少的组件。例如 tomcat 集成的 JSP 引擎 和 Servlet 引擎。
 
 ## 使用Servlet
+
+---
 
 Servlet 是运行在带 Java Servlet 规范的解释器上的 web 服务器上 的 Java 类。
 
@@ -235,15 +239,198 @@ Servlet 容器允许进行其他的隐式映射，只要显示映射的优先。
 
 ## 请求
 
+---
+
+### 基本认识
+
+主要内容点：
+
+1. 请求是什么
+2. 在java servlet由哪些类型表示
+3. 请求的生命周期
+4. 请求的内容格式
+5. 请求的处理方式
+
 > 请求对象封装了客户端请求的所有信息。在 HTTP 协议中，这些信息是从客户端发送到服务器请求的 HTTP 头部和消息体。
 
 在 Servlet 接口中，请求对象被定为 ServletRequest 接口类型；在 HttpServlet 类中，请求对象被指定为 HttpServletRequest 接口类型，它继承了 ServletRequest 接口，但是 `java.servlet.http` 提供了一个 HttpServletRequest 具体实现 `HttpServletRequestWrapper`
 
 具体关系结构：
 
-```uml
+![uml_servlet_request](./img/uml_servlet_request.png)
 
+```uml
+@startuml
+Title "ServletRequest类图"
+
+interface ServletRequest
+interface HttpServletRequest
+class ServletRequestWrapper
+class HttpServletRequestWrapper
+
+ServletRequest <|-- HttpServletRequest
+ServletRequest <|.. ServletRequestWrapper
+
+ServletRequestWrapper <|-- HttpServletRequestWrapper
+HttpServletRequest <|.. HttpServletRequestWrapper
+@enduml
 ```
+
+### 请求的生命周期
+
+通常情况下，每个请求对象只在一个 servlet 的 service 方法的作用域内，或过滤器的 doFilter 方法的作用域内有效，除非该组件启用了异步处理并且调用了请求对象的 [startAsync](#异步处理) 方法。
+
+在发生异步处理的情况下，请求对象一直有效，直到调用 AsyncContext 的 complete 方法。容器通常会重复利用请求对象，以避免创建请求对象而产生的性能开销。开发人员必须注意的是，不建议在上述范围之外保持 startAsync 方法还没有被调用的请求对象的引用，因为这样可能产生不确定的结果。
+
+在升级情况下，如上描述仍成立。
+
+### 请求的内容和格式
+
+思考：
+
+1. 请求由谁发送的，和它有什么关系
+2. 请求具体是请求些什么
+3. 请求包含了哪些数据，它们分别代表什么，又是如何区分的
+4. 请求的数据是哪一部分，它是按照什么格式传输的
+5. 又如何获取请求的信息、数据等等
+6. 有哪些获取数据的方式，针对不同的内容
+
+一般情况下，我们都是基于 Http 开发网站软件，使用 HttpServletRequest 来封装代表客户端（浏览器）发出的 http 请求，内容格式均按照标准的 http 协议规范定义。
+
+请求消息包括：请求行，请求头，请求数据；
+
+这里只关注 http 请求数据在 servlet 中的处理，详细的 http 规范请参照 [Http 篇](../../http/readme.md)
+
+#### HTTP 请求行
+
+思考：
+
+1. 请求行包括哪些内容，是怎样的格式
+2. 请求行的内容和 servlet 哪些 API 关联
+
+http 请求行包括：请求方法，请求路径(URL)，请求协议版本
+
+http 请求可以通过多种方式发送，它们都有各自不同的用途，也是区分资源的一种方式，例如常用的GET、POST，其他方法及用途参考 [Http 篇](../../http/readme.md#Method)
+
+在 Servlet 接口中获取 HTTP方法 的API：
+
+- getMethod()
+
+请求的路径元素：
+
+引导 servlet 服务请求的请求路径由许多重要部分组成。以下元素从请求URI路径得到，并通过请求对象公开：
+
+- Context Path：与 [ServletContext](#ServletContext) 相关联的路径前缀是这个servlet 的一部分。如果这个上下文是基于 Web 服务器的 URL 命名空间基础上的“默认”上下文，那么这个路径将是一个空字符串。否则，如果上下文不是基于服务器的命名空间，那么这个路径以 / 字符开始，但不以 / 字符结束。
+  
+- Servlet Path：路径部分直接与激活请求的映射对应。这个路径以“/”字符开头，如果请求与“/ *”或“”模式匹配，在这种情况下，它是一个空字符串。
+  
+- PathInfo：请求路径的一部分，不属于 Context Path 或 Servlet Path。如果没有额外的路径，它要么是null，要么是以'/'开头的字符串。
+
+使用 HttpServletRequest 接口中的下面方法来访问这些信息：
+
+- getContextPath
+- getServletPath
+- getPathInfo
+
+重要的是要注意，除了请求 URI 和路径部分的 URL 编码差异外，下面的等式永远为真：
+
+    requestURI = contextPath + servletPath + pathInfo
+
+简单的说：
+
+http 请求的 url 在 servlet 中被分为几个部分，这是由于映射的关系，其中还包括模糊匹配。
+
+这几个部分大致的意义为：
+
+- ContextPath：项目在 Servlet 容器中设置的根路径
+- ServletPath：具体某一个 Servlet 对象配置的 url 路径
+- PathInfo：对某一个 Servlet 采取尾部模糊匹配时，所匹配到的路径
+
+需要注意的是：
+
+请求路径和系统文件路径的转换
+
+在 API 中有两个方便的方法，允许开发者获得与某个特定的路径等价的文件系统路径
+
+- ServletContext.getRealPath(String)
+  
+    getRealPath 方法需要一个 String 参数，并返回一个 String 形式的路径，这个路径对应一个在本地文件系统上的文件。
+
+- HttpServletRequest.getPathTranslated()
+
+    getPathTranslated方法推断出请求的 pathInfo 的实际路径。
+
+这些方法在 servlet 容器无法确定一个有效的文件路径的情况下，如 Web 应用程序从归档中，在不能访问本地的远程文件系统上，或在一个数据库中执行时，这些方法必须返回 null。
+
+JAR 文件中 `META-INF/resources` 目录下的资源，只有当调用 getRealPath() 方法时才认为容器已经从包含它的 JAR 文件中解压，在这种情况下，必须返回解压缩后位置。 **?**
+
+#### HTTP 请求头
+
+思考：
+
+1. http 请求头有哪些内容，分别有什么作用，是如何存储的，格式
+2. 如何获取 http 请求头的内容
+
+通过下面的 HttpServletRequest 接口方法，servlet 可以访问 HTTP 请求的头信息：
+
+- getHeader(String)
+- getHeaders(String)
+- getHeaderNames()
+
+需要注意的是：
+
+getHeader 方法返回给定头名称的头。多个头可以具有相同的名称，例如HTTP 请求中的 Cache-Control 头。如果多个头的名称相同，getHeader方法返回请求中的第一个头。 getHeaders 方法允许访问所有与特定头名称相关的头值，返回一个 String 对象的 Enumeration（枚举）。
+
+头可包含由 String 形式的 int 或 Date 数据。HttpServletRequest接口提供如下方便的方法访问这些类型的头数据：
+
+- getIntHeader(String)
+- getDateHeader(String)
+
+如果 getIntHeader 方法不能转换为 int 的头值，则抛出NumberFormatException 异常。如果 getDateHeader 方法不能把头转换成一个 Date 对象，则抛出 IllegalArgumentException 异常。
+
+#### HTTP 请求参数
+
+思考：
+
+1. http 请求参数是哪一部分，是怎样的格式
+2. 使用参数有什么限制，或者在什么情况下有效
+3. 可以通过哪些方法或者方式获取到这些数据，它们又有什么区别
+
+当请求是一个 HttpServletRequest 对象，且符合“ **[参数可用时](#参数可用时)** ”描述的条件时，容器从 URI 查询字符串和 POST 数据中填充参数。
+
+GET 方法参数查询字符串一般形式：`http://test/api?name0=value0&key1=value1`。
+
+参数以一系列的名-值对（name-value）的形式保存。任何给定的参数的名称可存在多个参数值。ServletRequest 接口的下列方法可访问这些参数：
+
+- getParameter(String)：返回该键的第一个参数值
+- getParameterNames()：返回所有键的集合
+- getParameterValues(String)：返回参数名称为该 key 的所有参数值
+- getParameterMap()：封装了所有键-值对的映射集合对象
+
+需要注意的是：
+
+- getParameterValues 方法返回一个 String 对象的数组，包含了与参数名称相关的所有参数值。getParameter 方法的返回值必须是getParameterValues 方法返回的 String 对象数组中的第一个值。
+- 查询字符串和 POST 请求的数据被汇总到请求参数集合中。查询字符串数据放在 POST 数据之前。例如，如果请求由查询字符串 a=hello 和 POST 数据 a=goodbye&a=world 组成，得到的参数集合顺序将是 a=(hello, goodbye, world)。
+- 这些 API 不会暴露 GET 请求（HTTP 1.1所定义的）的路径参数。他们必须从 getRequestURI 方法或 getPathInfo 方法返回的字符串值中解析。
+
+##### 参数可用时
+
+思考：
+
+1. 参数可用指的是什么，又有什么作用
+2. 需要满足什么条件才能使参数可用
+3. 如果参数不可用，这种情况能怎么做
+
+Post 表单数据能填充到参数集（Paramter Set）前必须满足的条件：
+
+1. 该请求是一个 HTTP 或 HTTPS 请求。
+2. HTTP 方法是 POST。
+3. 内容类型是 application/x-www-form-urlencoded。
+4. 该 servlet 已经对请求对象的任意 getParameter 方法进行了初始调用。
+
+如果不满足这些条件，而且参数集中不包括 post 表单数据，那么 servlet 必须可以通过请求对象的输入流得到 post 数据。如果满足这些条件，那么从请求对象的输入流中直接读取 post 数据将不再有效。
+
+### ServletContext
 
 ## Servlet 实现原理
 
