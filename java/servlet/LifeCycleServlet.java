@@ -39,4 +39,5 @@ public class LifeCycleServlet extends HttpServlet{
         System.out.println("doGet()");
     }    
     //...
+
 }

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Servlet Test</title>
+</head>
+
+<body>
+
+    1. <a href="LifeCycleServlet">生命周期测试</a><br>
+
+    2. <a href="AnnotationPatternServlet">servlet 另一种声明方式：注解 @WebServlet</a><br>
+
+    3. http 请求
+    <form name="reqForm" action="test/request/" onsubmit="return testRequest(this)">
+        名字：<input type="text" name="name"><br />
+        网址：<input type="text" name="path"/><br />
+        方法：<select name="mt">
+            <option value="get">GET</option>
+            <option value="post">POST</option>            
+        </select>
+        <input type="submit" value="提交" />
+    </form>
+    <script>
+        function testRequest(f){
+            f.method = f.mt.value;
+            return true;
+        }
+    </script>
+
+    <div>
+        <h3>session 阻止重复提交表单</h3>
+        <form name="form1" action="test/servlet/form/submit" method="get">
+            <input type="hidden" name="token"><br />
+            名字：<input type="text" name="name"><br />
+            密码：<input type="text" name="path"/><br />
+            方法：<select name="mt">
+                <option value="get">GET</option>
+                <option value="post">POST</option>            
+            </select>
+            <input type="submit" value="提交" />
+        </form>
+        <script>
+            fetch("test/servlet/form/token",{
+                    method: "POST",
+                    credentials: 'include' // 强制加入凭据头             
+                })
+                .then((resp)=>{                
+                    return resp.text();
+                })
+                .then((data)=>{
+                    console.log(data);
+                    document.forms.form1.token.value = data;
+                    return null;
+                });
+            function testRequest(f){
+                f.method = f.mt.value;
+                return true;
+            }
+        </script>
+    </div>
+    <div>
+        <h3>session 一次性验证</h3>
+        <form name="form1" action="test/session/checkout/main" method="get">
+            名字：<input type="text" name="name"><br />
+            密码：<input type="text" name="path"/><br />
+            验证：<input type="text" name="num"><img  alt="验证码" name="checkImg" onclick="changeImg()"> <br />
+            <input type="submit" value="提交" />
+        </form>
+        <script>
+            function changeImg(){
+                document.images.checkImg.src = "test/session/checkout/makeimg?tm="+new Date().getTime()
+            }
+            changeImg();
+        </script>
+    </div>
+    <div>
+            <h3>文件上传</h3>
+            <form name="form1" action="test/file/upimg" method="post">
+                文件：<input type="file" name="file"><br />
+                效果：<img  alt="文件" name="upimg" disabled> <br />
+                <input type="submit" value="提交" />
+            </form>
+
+        </div>
+</body>
+
+</html>

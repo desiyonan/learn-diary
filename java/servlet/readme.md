@@ -336,6 +336,8 @@ http 请求可以通过多种方式发送，它们都有各自不同的用途，
 
     requestURI = contextPath + servletPath + pathInfo
 
+以及查询字符串。
+
 简单的说：
 
 http 请求的 url 在 servlet 中被分为几个部分，这是由于映射的关系，其中还包括模糊匹配。
@@ -363,6 +365,8 @@ http 请求的 url 在 servlet 中被分为几个部分，这是由于映射的�
 这些方法在 servlet 容器无法确定一个有效的文件路径的情况下，如 Web 应用程序从归档中，在不能访问本地的远程文件系统上，或在一个数据库中执行时，这些方法必须返回 null。
 
 JAR 文件中 `META-INF/resources` 目录下的资源，只有当调用 getRealPath() 方法时才认为容器已经从包含它的 JAR 文件中解压，在这种情况下，必须返回解压缩后位置。 **?**
+
+HTTP 协议可以通过 `getProtocol()` 获取
 
 #### HTTP 请求头
 
@@ -430,7 +434,189 @@ Post 表单数据能填充到参数集（Paramter Set）前必须满足的条件
 
 如果不满足这些条件，而且参数集中不包括 post 表单数据，那么 servlet 必须可以通过请求对象的输入流得到 post 数据。如果满足这些条件，那么从请求对象的输入流中直接读取 post 数据将不再有效。
 
-### ServletContext
+#### HTTP 携带数据（文件）
+
+#### 客户端信息
+
+ServletRequest 保存了用户的信息，可以通过以下方式获取：
+
+- getRemoteAddr(): ip地址
+- getRemoteHost(): 主机名
+- getRemoteUser(): 认证用户
+
+请求头也保存了许多浏览器的信息，及部分设置
+
+### Cookies
+
+Cookie 是存储在客户端计算机上的文本文件，并保留了各种跟踪信息。
+
+一个 Web 服务器可以分配一个唯一的 session 会话 ID 作为每个 Web 客户端的 cookie，对于客户端的后续请求可以使用接收到的 cookie 来识别。
+
+HttpServletRequest 接口提供了 getCookies 方法来获得请求中的cookie 的一个数组。这些 cookie 是从客户端发送到服务器端的客户端发出的每个请求上的数据。
+
+HttpOnly cookie 暗示客户端它们不会暴露给客户端脚本代码（它没有被过滤掉，除非客户端知道如何查找此属性）。使用 HttpOnly cookie 有助于减少某些类型的跨站点脚本攻击。
+
+Cookies 主要的属性包括：
+
+- 名字，键
+- 值
+- 加密
+- 作用域
+- 适用路径
+- 有效时间
+- 注释
+
+Cookies 常用的API：
+
+- void setDomain(String pattern): 设置适用域
+- String getDomain(): 获取适用域
+- void setMaxAge(int explry)：设置过期时间，单位秒，默认当前会话持续
+- String getName(): 返回名字，不能修改
+- void setValue(String val): 设置值
+- String getValue()：获取值
+- void setPath(): 设置适用路径，默认当前路径及子目录的所有 URL
+- String getPath()： 获取适用路径
+- void setSecure(boolean flag): 设置加密
+- void setComment(String com): 设置注释
+- String getComment(): 获取注释
+
+需要注意的是：
+
+请记住，无论是名字还是值，都不应该包含空格或以下任何字符：
+
+    [ ] ( ) = , " / ? @ : ;
+
+### Session
+
+思考：
+
+1. session 是什么，为什么需要它，作用
+2. 和 cookies 有什么不同
+3. 服务器如何知道客户端和 session 怎样对应的
+4. session 的作用域，生命周期
+5. session 包含了哪些信息
+
+>Session是服务器端技术，利用这个技术，服务器在运行时可以为每一个用户的浏览器创建一个其独享的Session对象，由于Session为用户浏览器独享，所以用户在访问服务器的Web资源时，可以把各自的数据放在各自的Session中，当用户再去访问服务器中的其它Web资源时，其它Web资源再从用户各自的Session中取出数据为用户服务。
+
+session 即会话，表示一次浏览器和服务器的对话连接。
+
+session 的作用就是保存浏览器和服务器交互的过程的数据信息。通常用来验证保存识别用户信息，以控制权限。用来在无状态的HTTP协议下越过多个请求页面来维持状态和识别用户。
+
+需要注意的是：
+
+一个 session 是一个浏览器独占的，即当通过其他客户端访问服务同一网页时，服务器会给该客户端重新分配一个 session 。
+
+同样 cookies 也是保存信息，它们之间主要的区别包括：
+
+- Cookie是把用户的数据写给用户的浏览器。
+- Session技术把用户的数据写到用户独占的session中。
+- Session对象由服务器创建，开发人员可以调用request对象的getSession方法得到session对象。
+
+它们之间的关联：
+
+由于 session 是服务器端技术，只有服务器知道客户端和 session 之间的关系也无法维持关系，所以服务器必须通过其他技术告知浏览器”你是谁“，通常是使用 cookies 保存该会话的 sessionid ，以在服务器上找到对应 session。
+
+简单的使用：
+
+当前会话：通过`request.getSession([Boolean isCreate])`得到当前会话对象
+设置数据：通过`session.setAttribute(String name,Object key)` 保存属性，会覆盖已有值
+获取属性：通过`session.getAttribute(String name)`获取已保存的属性
+
+在 Servlet 中 HttpSession 常用的API：
+
+- String getId()
+- void setAttribute(String,Object)
+- Object getAttribute(String)
+- void removeAttribute(String)
+- Enumeration getAttributeNames()
+- long getCreationTime()
+- boolean isNew():客户端参与该 session 与否
+- long getLastAccessedTime()
+- int getMaxInactiveInterval():访问最大间隔的保持时间，不大于0永不过期，默认30m
+- void setMaxInactiveInterval(int)： 单位秒
+- void invalldate():使该 session 无效化
+
+#### 创建会话
+
+Session 在用户第一次访问服务器Servlet，jsp等动态资源就会被自动创建，Session对象保存在内存里。当第一次访问 Servlet 时，如果没有自动创建也可以通过 `req.getSession(true)`来创建。
+
+需要注意的是：
+
+1. 如果访问HTML,IMAGE等静态资源Session不会被创建。
+2. Session生成后，只要用户继续访问，服务器就会更新Session的最后访问时间，无论是否对Session进行读写，服务器都会认为Session活跃了一次。
+3. 由于会有越来越多的用户访问服务器，因此Session也会越来越多。为了防止内存溢出，服务器会把长时间没有活跃的Session从内存中删除，这个时间也就是Session的超时时间。
+
+>当会话仅是一个未来的且还没有被建立时会话被认为是“新”的。因为 HTTP是一种基于请求-响应的协议，直到客户端“加入”到 HTTP 会话之前它都被认为是新的。当会话跟踪信息返回到服务器指示会话已经建立时客户端加入到会话。直到客户端加入到会话，不能假定下一个来自客户端的请求被识别为同一会话。
+
+如果以下之一是 true，会话被认为是“新”的：
+
+- 客户端还不知道会话
+- 客户端选择不加入会话。
+
+与每个会话相关联是一个包含唯一标识符的字符串，也被称为会话ID。会话 ID 的值能通过调用`javax.servlet.http.HttpSession.getId()` 获取，且能在创建后通过调用`javax.servlet.http.HttpServletRequest.changeSessionId()` 改变。
+
+#### 会话的作用域
+
+HttpSession 对象必须被限定在应用（或 servlet 上下文）级别。底层的机制，如使用 cookie 建立会话，不同的上下文可以是相同，但所引用的对象，包括包括该对象中的属性，决不能在容器上下文之间共享。
+
+#### 会话的有效期
+
+每一个会话在创建过后，都有一个超时限制，当超过这个时间该会话就会被容器认定为无效的，在此访问时需要重新创建，而在规定时间内在此访问都会重置计时。
+
+即便用户关闭了浏览器，结束了当前会话，session也不会立即销毁，直到时效内session未被使用。关闭浏览器可能会使已经保存的 sessionid 的cookies失效，导致无法继续之前的会话，可以通过延长 cookies 的有效期来避免。
+
+能使会话无效销毁的只有两种方式：
+
+1. 超时
+2. 调用`session.invalldate`
+
+但是也可以设定为永不超时（<=0），超时限制可以通过`session.getMaxInactiveInterval()`获取，而设置这个值有两种方式：
+
+1. 通过调用`setMaxInactiveInterval(int)`
+2. 配置`web.xml`，包括项目内的，和Web服务器的都能起作用。
+
+    ```xml
+    <session-config>
+        <session-timeout>10</session-timeout>
+    </session-config>
+    ```
+
+#### Session 的用途
+
+已经知道 session 是服务器上保存与用户交互的信息数据的技术，那么它能做到哪些事情呢？
+
+- 验证登录信息
+- 阻止表单重复提交，
+- 一次性校验码
+
+### 会话跟踪
+
+HTTP 是一种"无状态"协议，这意味着每次客户端检索网页时，客户端打开一个单独的连接到 Web 服务器，服务器会自动不保留之前客户端请求的任何记录。
+
+但是仍然有以下四种方式来维持 Web 客户端和 Web 服务器之间的 session 会话：
+
+- URL 重写
+- 隐藏的表单字段
+- Cookies
+- Session
+
+通过 HTTP cookie 的会话跟踪是最常用的会话跟踪机制，且所有 servlet 容器都应该支持。
+
+容器向客户端发送一个 cookie，客户端后续到服务器的请求都将返回该cookie，明确地将请求与会话关联。会话跟踪 cookie 的标准名字必须是`JSESSIONID`。容器也允许通过容器指定的配置自定义会话跟踪cookie的名字。
+
+URL 重写
+
+会话 ID 必须被编码为 URL 字符串中的一个路径参数。参数的名字必须是jsessionid。下面是一个 URL 包含编码的路径信息的例子：
+
+`http://www.myserver.com/catalog/index.html;jsessionid=1234`
+
+### HTTPS
+
+### 文件上传
+
+### IO
+
+## ServletContext
 
 ## Servlet 实现原理
 
