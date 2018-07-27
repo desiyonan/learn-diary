@@ -32,15 +32,15 @@ public class SessionPreventSubmit extends HttpServlet {
     private void handleForm(HttpServletRequest req,HttpServletResponse resp) throws IOException {
         Writer out = resp.getWriter();
         if(isValidForm(req)){
+            String toke_s = (String) req.getSession().getAttribute("token");
+            out.write("submit by token "+ toke_s);
+            System.out.println("submit by token "+ toke_s);
+            req.getSession().removeAttribute("token");
             try {
                 Thread.sleep(300);
             } catch (Exception e) {
                 //TODO: handle exception
             }
-            String toke_s = (String) req.getSession().getAttribute("token");
-            out.write("submit by token "+ toke_s);
-            System.out.println("submit by token "+ toke_s);
-            req.getSession().removeAttribute("token");
         }else{
             out.write("don't submit; check token");
             System.out.println("don't submit; check token");
