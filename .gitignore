@@ -1,3 +1,6 @@
+*/.*/*
+*/.idea/*
+*/out/*
 java/.idea/*
 java/out/*
 java/.idea/artifacts/learn_diary_Web_exploded.xml
@@ -22,3 +25,4 @@ java/out/artifacts/learn_diary_Web_exploded/WEB-INF/classes/WEB-INF/web.xml
 java/out/artifacts/learn_diary_Web_exploded/WEB-INF/classes/test/utils.class
 java/out/artifacts/learn_diary_Web_exploded/test/file/TIM.ico
 java/out/artifacts/learn_diary_Web_exploded/test/file/k.png
+
