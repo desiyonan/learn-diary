@@ -1,0 +1,7 @@
+# s
+
+```plantuml
+@startuml
+
+@enduml
+```

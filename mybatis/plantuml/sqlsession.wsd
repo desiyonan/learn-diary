@@ -1,0 +1,36 @@
+@startuml mybatis sqlSessionUML图
+interface SqlSession
+interface SqlSessionFactory
+
+class Configuration
+class SqlSessionManager
+class SqlSessionFactoryBuilder
+
+interface SqlSession{
+    Configuration getConfiguration()
+
+    {method} select()
+    int insert()
+    int update()
+    int delete()
+}
+
+interface SqlSessionFactory{
+    Configuration getConfiguration()
+    SqlSession openSession()
+}
+
+class SqlSessionFactoryBuilder{
+    +SqlSessionFactory build()
+}
+
+class SqlSessionManager{
+    -SqlSessionFactory sqlSessionFactory
+    -SqlSession SqlSessionProxy
+}
+
+SqlSession <|..* SqlSessionManager
+SqlSessionFactory <|..* SqlSessionManager
+
+
+@enduml
