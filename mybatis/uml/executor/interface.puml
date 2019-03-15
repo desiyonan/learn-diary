@@ -1,0 +1,70 @@
+@startuml mybatis 执行关系uml
+interface Cursor
+interface Executor
+interface Transaction
+interface ResultHandler
+interface ResultContext
+
+class BoundSql
+class CacheKey
+class RowBounds
+class MetaObject
+class MappedStatement
+
+' 接口定义
+interface Executor{
+    ResultHandler NO_RESULT_HANDLER = null
+
+    update(MappedStatement, Object)
+    List<E> query(MappedStatement, Object, RowBounds, ResultHandler, CacheKey, BoundSql)
+    ' List<E> query(MappedStatement, Object, RowBounds, ResultHandler)
+    Cursor<E> queryCursor(MappedStatement, Object, RowBounds)
+    CacheKey createCacheKey(MappedStatement, Object, RowBounds, BoundSql)
+    Transaction getTransaction()
+    void setExecutorWrapper(Executor)
+}
+interface ResultHandler{
+    void handleResult(ResultContext)
+}
+interface ResultContext{
+    T getResultObject()
+    int getResultCount()
+    boolean isStopped()
+    void stop()
+}
+interface Cursor{
+    boolean isOpean()
+    boolean isConsumed()
+    int getCurrentIndex()
+}
+
+' 类定义
+class RowBounds{
+    {static} final int NO_ROW_OFFSET = 0
+    {static} final int NO_ROW_LIMIT = Integer.MAX_VALUE
+    {field} {static} final RowBounds DEFAULT = new RowBounds()
+    ......
+    final int limit
+    final int offset
+}
+class BoundSql{
+    final String sql
+    final List<ParameterMapping> parameterMappings
+    final Object parameterObject
+    final Map additionalParameters
+    final MetaObject metaParameters
+}
+
+MetaObject <. BoundSql
+BoundSql .> Configuration
+ResultContext <. ResultHandler
+
+BoundSql <.. Executor
+MappedStatement <. Executor
+
+Executor .> RowBounds
+Executor ..> CacheKey
+Executor ..> Cursor
+Executor ..> Transaction
+Executor ..> ResultHandler
+@enduml

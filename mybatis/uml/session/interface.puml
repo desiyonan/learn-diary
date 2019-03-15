@@ -1,4 +1,4 @@
-@startuml mybatis sqlSessionUML图
+@startuml sqlSession 接口关系UML图
 interface SqlSession
 interface SqlSessionFactory
 
@@ -29,8 +29,12 @@ class SqlSessionManager{
     -SqlSession SqlSessionProxy
 }
 
-SqlSession <|..* SqlSessionManager
+' 接口层
+Configuration <-- SqlSession
+Configuration <-- SqlSessionFactory
+SqlSession <. SqlSessionFactory
+SqlSessionFactoryBuilder ..> SqlSessionFactory
+Configuration .> SqlSessionFactoryBuilder
 SqlSessionFactory <|..* SqlSessionManager
-
-
+SqlSession <|..* SqlSessionManager
 @enduml

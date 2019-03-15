@@ -1,0 +1,8 @@
+{
+    "plantuml.diagramsRoot": "mybatis/uml",
+    "plantuml.previewSnapIndicators": true,
+    "plantuml.exportOutDir": "mybatis/uml",
+    "plantuml.includes": [
+        "mybatis/uml"
+    ]
+}
