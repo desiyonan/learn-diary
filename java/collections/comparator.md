@@ -1,11 +1,17 @@
 # JDK8 集合类排序比较
 
+## 使用 `Comparator` 遇到的问题
+
+- `Comparator.comparing` 无法推断类型
+
+使用 `Comparator.comparing` 和 `thenComparing` 时编译提示
+
 ## List排序
 
 - List.sort()
 - CollectionUtils.sort()
 
-以 `Map<String,Object>` 为例 
+以 `Map<String,Object>` 为例
 
 示例中使用到的静态方法
 
