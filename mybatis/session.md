@@ -29,13 +29,13 @@ SqlSession openSession(ExecutorType execType, TransactionIsolationLevel level);
 SqlSession openSession(ExecutorType execType, Connection connection);
 ```
 
-在使用以上方法获取 `SqlSession` 实例时，通常需要考虑到以下几方面：
+官方简介上有对使用以上方法获取 `SqlSession` 实例的说明，通常需要考虑到以下几方面：
 
 > - 事务处理：我需要在 session 使用事务或者使用自动提交功能（auto-commit）吗？（通常意味着很多数据库和/或 JDBC 驱动没有事务）
 > - 连接：我需要依赖 MyBatis 获得来自数据源的配置吗？还是使用自己提供的配置？
 > - 执行语句：我需要 MyBatis 复用预处理语句和/或批量更新语句（包括插入和删除）吗？
 
-mybaits 在枚举 `TransactionIsolationLevel` 下定义了支持的事务级别，同时也可以在接口 `Connection` 找到对应常量：
+mybaits 在枚举 `TransactionIsolationLevel` 下定义了支持的事务级别，同时也可以在接口 `Connection` 找到对应常量值：
 
 ```java
 public enum TransactionIsolationLevel {
