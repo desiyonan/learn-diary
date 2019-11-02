@@ -1,0 +1,7 @@
+
+## folder config
+*/.idea
+*/out
+
+## java config
+*.class
